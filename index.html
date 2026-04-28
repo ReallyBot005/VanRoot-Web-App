@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VANROOTS - Premium Cinematic WebGL</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Hind:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&display=swap" rel="stylesheet">
+    <!-- GSAP & Lenis for Apple-level smoothness -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary-bg: #0B0F0E;
+            --accent-glow: #C98A3D;
+            --text-color: #F8F7F2;
+            --editorial-white: #F7F4EE;
+            --charcoal: #161616;
+            --muted-grey: #6E6E6E;
+            --luxury-accent: #C98A3D;
+            --cta-accent: #3F5E45;
+            --cta-hover: #2E4735;
+            --border-color: rgba(0,0,0,0.08);
+            --soft-shadow: rgba(0,0,0,0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100%;
+            background-color: var(--primary-bg);
+            overflow-x: hidden;
+            font-family: 'Hind', sans-serif;
+        }
+
+        /* --- HERO (FIXED - UNTOUCHED) --- */
+        #webgl-canvas {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            z-index: 1;
+            background: #000;
+        }
+
+        .text-overlay-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            background: linear-gradient(180deg, rgba(11, 15, 14, 0.7) 0%, rgba(16, 23, 20, 0.9) 100%);
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .text-content {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100vh;
+            z-index: 4;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            perspective: 1500px;
+        }
+
+        .text-wrapper {
+            text-align: center;
+            padding: 40px;
+            cursor: pointer;
+            pointer-events: auto;
+            transform-style: preserve-3d;
+        }
+
+        .title-inner {
+            display: inline-block;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8), 0 0 40px rgba(0,0,0,0.4);
+            transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1), text-shadow 0.8s ease, filter 0.8s ease;
+            will-change: transform, text-shadow, filter;
+            font-family: 'Cinzel', serif;
+            letter-spacing: clamp(12px, 4vw, 36px);
+            color: var(--text-color);
+            position: relative;
+        }
+
+        .text-wrapper:hover .title-inner {
+            transform: scale(1.04) translateZ(100px);
+            text-shadow: 0 0 60px var(--accent-glow);
+            filter: brightness(1.3);
+        }
+
+        h1.title {
+            font-size: clamp(3.5rem, 9vw, 8rem);
+            margin: 0;
+            font-weight: 400;
+            opacity: 0; 
+            filter: blur(25px);
+            transform: scale(0.95) translateY(20px);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), filter 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, filter, transform;
+        }
+
+        p.subtitle {
+            font-family: 'Hind', sans-serif;
+            font-size: clamp(0.95rem, 2vw, 1.4rem);
+            letter-spacing: 5px;
+            margin-top: 2.5rem;
+            font-weight: 300;
+            text-transform: uppercase;
+            opacity: 0; 
+            transform: translateY(30px);
+            color: var(--text-color);
+            text-shadow: 0 2px 20px rgba(0,0,0,1);
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1), transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, transform;
+            position: relative;
+            min-height: 1.5em;
+        }
+
+        #sub-title-inner {
+            display: inline-block;
+            transition: opacity 0.4s ease, filter 0.4s ease;
+        }
+
+        #sub-title-inner::after {
+            content: '|';
+            margin-left: 2px;
+            animation: blink 1s step-end infinite;
+            font-weight: 400;
+            color: var(--accent-glow);
+        }
+
+        @keyframes blink {
+            from, to { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        #react-root {
+            position: relative;
+            z-index: 100;
+            background: var(--editorial-white);
+            opacity: 0; /* Managed by GSAP/Framer */
+        }
+
+        #fade-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000;
+            z-index: 9999;
+            pointer-events: none;
+            transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div id="fade-overlay"></div>    <!-- REACT MOUNT POINT (Replaces manual section) -->
+    <div id="react-root" style="margin-top: 1200vh;"></div>
+
+    <script type="module" src="/main.jsx"></script>
+
+    <!-- HERO SECTION (UNCHANGED) -->
+    <div id="webgl-canvas"></div>
+    <div class="text-overlay-bg" id="text-bg"></div>
+    <div class="text-content">
+        <div class="text-wrapper" id="interaction-zone">
+            <h1 class="title" id="main-title"><span class="title-inner">VANROOTS</span></h1>
+            <p class="subtitle" id="sub-title">
+                <span id="sub-title-inner"></span>
+            </p>
+        </div>
+    </div>
+    </div>
+
+
+    <script>
+        // --- SMOOTH SCROLL (LENIS) --- //
+        const lenis = new Lenis({
+            duration: 1.5,
+            easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+            orientation: 'vertical',
+            gestureOrientation: 'vertical',
+            smoothWheel: true,
+            wheelMultiplier: 1,
+            smoothTouch: false,
+            touchMultiplier: 2,
+            infinite: false,
+        });
+
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // --- GSAP SCROLL LOGIC --- //
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Transition Reveal for React Section (Simple Fade)
+        // Premium Reveal for React Section
+        gsap.set("#react-root", { opacity: 0 });
+        gsap.to("#react-root", {
+            scrollTrigger: {
+                trigger: "#react-root",
+                start: "top 95%",
+                toggleActions: "play none none reverse"
+            },
+            opacity: 1,
+            duration: 1.5,
+            ease: "power2.out"
+        });
+
+        // Parallax rising effect for the Text Section (More delayed)
+        gsap.from("#react-editorial", {
+            y: 180, // Increased offset for more parallax
+            opacity: 0,
+            scrollTrigger: {
+                trigger: "#react-editorial",
+                start: "top bottom", 
+                end: "top 20%",
+                scrub: 2.2, // Higher scrub for more premium weighted delay
+            }
+        });
+
+        // Parallax rising effect for the Map Section
+        gsap.from("#react-map", {
+            y: 150,
+            opacity: 0,
+            scrollTrigger: {
+                trigger: "#react-map",
+                start: "top bottom", 
+                end: "top 30%",
+                scrub: 1.8,
+            }
+        });
+
+
+        // --- WEBGL CORE (UNCHANGED) --- //
+        const container = document.getElementById('webgl-canvas');
+        const textBg = document.getElementById('text-bg');
+        const fadeOverlay = document.getElementById('fade-overlay');
+        
+        const scene = new THREE.Scene();
+        const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container.appendChild(renderer.domElement);
+
+        const TOTAL_FRAMES = 360;
+        const START_FRAME = 70;
+        const END_FRAME = 360;
+        const VALID_FRAMES = END_FRAME - START_FRAME + 1;
+        const WATERFALL_TRIGGER_START = 150; 
+        
+        const currentFramePath = index => {
+            let actualFrame = index + START_FRAME;
+            return `./${actualFrame.toString().padStart(5, '0')}.png`;
+        };
+
+        const textureLoader = new THREE.TextureLoader();
+        const textures = [];
+        let loadedCount = 0;
+        let isReady = false;
+        let hasFadedIn = false;
+
+        const vertexShader = `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = vec4(position, 1.0);
+            }
+        `;
+
+        const fragmentShader = `
+            uniform sampler2D uTexA;
+            uniform sampler2D uTexB;
+            uniform float uBlend;
+            uniform vec2 uRes;
+            uniform vec2 uImgRes;
+            uniform float uFog;
+            uniform float uTilt;
+            varying vec2 vUv;
+
+            void main() {
+                vec2 uv = vUv;
+                float s = uRes.x / uRes.y;
+                float i = uImgRes.x / uImgRes.y;
+                if (s > i) {
+                    uv.y = (uv.y - 0.5) * i / s + 0.5;
+                } else {
+                    uv.x = (uv.x - 0.5) * s / i + 0.5;
+                }
+                uv.y += uTilt * 0.05;
+                
+                vec4 colorA = texture2D(uTexA, uv);
+                vec4 colorB = texture2D(uTexB, uv);
+                vec4 finalColor = mix(colorA, colorB, uBlend);
+                
+                vec3 fogColor = vec3(0.88, 0.92, 0.98);
+                finalColor.rgb = mix(finalColor.rgb, fogColor, uFog * 0.04); 
+                
+                float noise = fract(sin(dot(uv + uBlend, vec2(12.9898, 78.233))) * 43758.5453);
+                finalColor.rgb += (noise - 0.5) * 0.02;
+
+                float dist = distance(vUv, vec2(0.5));
+                finalColor.rgb *= smoothstep(1.1, 0.45, dist);
+
+                finalColor.rgb *= 1.05; 
+                gl_FragColor = finalColor;
+            }
+        `;
+
+        const material = new THREE.ShaderMaterial({
+            uniforms: {
+                uTexA: { value: null },
+                uTexB: { value: null },
+                uBlend: { value: 0 },
+                uRes: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+                uImgRes: { value: new THREE.Vector2(1920, 1080) },
+                uFog: { value: 0 },
+                uTilt: { value: 0 }
+            },
+            vertexShader,
+            fragmentShader
+        });
+
+        const plane = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), material);
+        scene.add(plane);
+
+        const loadTextures = () => {
+            for (let i = 0; i < VALID_FRAMES; i++) {
+                textureLoader.load(currentFramePath(i), (tex) => {
+                    tex.generateMipmaps = false;
+                    tex.minFilter = THREE.LinearFilter;
+                    tex.magFilter = THREE.LinearFilter;
+                    textures[i] = tex;
+                    loadedCount++;
+                    if (i === 0) isReady = true;
+                });
+            }
+        };
+
+        let targetFraction = 0;
+        let currentFraction = 0;
+
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.scrollY || document.documentElement.scrollTop;
+            const animationRange = window.innerHeight * 12;
+            targetFraction = Math.max(0, Math.min(1, scrollTop / animationRange));
+        }, { passive: true });
+
+        const title = document.getElementById('main-title');
+        const subtitle = document.getElementById('sub-title');
+        const subtitleInner = document.getElementById('sub-title-inner');
+        const interactionZone = document.getElementById('interaction-zone');
+        const subtitleEn = "Not just travel. A journey into the roots of Meghalaya.";
+        const subtitleHi = "सिर्फ यात्रा नहीं। मेघालय की जड़ों तक का एक सफ़र।";
+        let lastTypeIndex = -1;
+        let isHindi = false;
+        let isAnimating = false;
+
+        const loop = () => {
+            if (!isReady || !textures[0]) {
+                requestAnimationFrame(loop);
+                return;
+            }
+
+            if (!hasFadedIn) {
+                fadeOverlay.style.opacity = '0';
+                hasFadedIn = true;
+            }
+
+            const diff = targetFraction - currentFraction;
+            currentFraction += diff * 0.025;
+            if (Math.abs(diff) < 0.00001) currentFraction = targetFraction;
+
+            let clampedFrac = Math.max(0, Math.min(1, currentFraction));
+            const frameFloat = clampedFrac * (VALID_FRAMES - 1);
+            const actualFrame = START_FRAME + Math.floor(frameFloat);
+            
+            const indexA = Math.floor(frameFloat);
+            const indexB = Math.min(VALID_FRAMES - 1, indexA + 1);
+            const blend = frameFloat % 1;
+
+            if (textures[indexA] && textures[indexB]) {
+                material.uniforms.uTexA.value = textures[indexA];
+                material.uniforms.uTexB.value = textures[indexB];
+                material.uniforms.uBlend.value = blend;
+            }
+
+            // --- ORIGINAL HERO LOGIC ---
+            let baseFog = clampedFrac < 0.1 ? 0.8 - (clampedFrac * 4) : 0.4;
+            const hasStarted = (actualFrame >= WATERFALL_TRIGGER_START);
+            const fogVal = hasStarted ? 0.3 : Math.max(0.3, baseFog); 
+            material.uniforms.uFog.value = fogVal;
+            
+            const tiltVal = clampedFrac > 0.8 ? (clampedFrac - 0.8) / 0.2 : 0;
+            material.uniforms.uTilt.value = tiltVal;
+
+            if (hasStarted) {
+                title.style.opacity = "1";
+                title.style.filter = "blur(0px)";
+                title.style.transform = "scale(1) translateY(0px)";
+                textBg.style.opacity = "1";
+
+                if (actualFrame >= WATERFALL_TRIGGER_START + 15) {
+                    subtitle.style.opacity = "1";
+                    subtitle.style.transform = "translateY(0px)";
+                    
+                    if (!isHindi && !isAnimating) {
+                        const subProg = (actualFrame - (WATERFALL_TRIGGER_START + 15)) / 40;
+                        const currentLen = Math.floor(Math.min(1, subProg) * subtitleEn.length);
+                        if (currentLen !== lastTypeIndex) {
+                            subtitleInner.innerText = subtitleEn.substring(0, currentLen);
+                            lastTypeIndex = currentLen;
+                        }
+                    }
+                }
+            } else {
+                title.style.opacity = "0";
+                title.style.filter = "blur(15px)";
+                title.style.transform = "scale(0.95) translateY(20px)";
+                subtitle.style.opacity = "0";
+                subtitle.style.transform = "translateY(30px)";
+                textBg.style.opacity = "0";
+                lastTypeIndex = -1;
+                if (!isAnimating) subtitleInner.innerText = "";
+            }
+
+            renderer.render(scene, camera);
+            requestAnimationFrame(loop);
+        };
+
+        const typeMorph = (newText, callback) => {
+            isAnimating = true;
+            subtitleInner.style.filter = "blur(8px)";
+            subtitleInner.style.opacity = "0";
+            setTimeout(() => {
+                subtitleInner.innerText = "";
+                let i = 0;
+                subtitleInner.style.filter = "blur(0px)";
+                subtitleInner.style.opacity = "1";
+                const interval = setInterval(() => {
+                    subtitleInner.innerText = newText.substring(0, i);
+                    i++;
+                    if (i > newText.length) {
+                        clearInterval(interval);
+                        isAnimating = false;
+                        if (callback) callback();
+                    }
+                }, 30);
+            }, 300);
+        };
+
+        interactionZone.addEventListener('mouseenter', () => {
+            if (isHindi || isAnimating || subtitle.style.opacity == "0") return;
+            isHindi = true;
+            typeMorph(subtitleHi);
+        });
+
+        interactionZone.addEventListener('mouseleave', () => {
+            if (!isHindi || isAnimating || subtitle.style.opacity == "0") return;
+            isHindi = false;
+            typeMorph(subtitleEn);
+        });
+
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            material.uniforms.uRes.value.set(window.innerWidth, window.innerHeight);
+        });
+
+        loadTextures();
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
