@@ -242,6 +242,18 @@
             }
         });
 
+        // Parallax rising effect for the Community Section
+        gsap.from("#community-roots", {
+            y: 120,
+            opacity: 0,
+            scrollTrigger: {
+                trigger: "#community-roots",
+                start: "top bottom",
+                end: "top 35%",
+                scrub: 1.6,
+            }
+        });
+
 
         // --- WEBGL CORE (UNCHANGED) --- //
         const container = document.getElementById('webgl-canvas');
