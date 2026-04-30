@@ -167,7 +167,7 @@ const CommunitySection = () => {
     };
 
     return (
-        <section id="community-roots" className="c-section">
+        <section id="react-community" className="c-section">
             <style>{CSS}</style>
             <div className="c-container">
 
@@ -221,7 +221,7 @@ const CommunitySection = () => {
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-.c-section { background:#F6F1E8; padding:120px 0 80px; position:relative; z-index:100; }
+.c-section { background:#F6F1E8; padding:120px 0 80px; position:relative; z-index:100; min-height:100vh; }
 .c-container { max-width:1280px; margin:0 auto; padding:0 32px; }
 .c-header { text-align:center; margin-bottom:64px; }
 .c-label { font-family:'Inter',sans-serif; font-size:11px; font-weight:700; color:#3F5E45; letter-spacing:3px; text-transform:uppercase; display:block; margin-bottom:16px; }

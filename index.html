@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VANROOTS - Premium Cinematic WebGL</title>
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Hind:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500&family=Hind:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,400&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- GSAP & Lenis for Apple-level smoothness -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -145,7 +145,24 @@
             position: relative;
             z-index: 100;
             background: var(--editorial-white);
-            opacity: 0; /* Managed by GSAP/Framer */
+            opacity: 0; /* Managed by GSAP/Framer or route detection */
+        }
+
+        /* Booking route: full-screen takeover */
+        body.booking-route #react-root {
+            position: fixed;
+            inset: 0;
+            margin-top: 0 !important;
+            opacity: 1 !important;
+            z-index: 9998;
+            background: #DDE9E6;
+        }
+
+        body.booking-route #webgl-canvas,
+        body.booking-route .text-overlay-bg,
+        body.booking-route .text-content,
+        body.booking-route #fade-overlay {
+            display: none !important;
         }
 
         #fade-overlay {
@@ -157,6 +174,22 @@
             transition: opacity 2.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
+        @keyframes vanrootsRipple {
+            to { transform: translate(-50%, -50%) scale(3.5); opacity: 0; }
+        }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(24,194,164,0.35); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(24,194,164,0.55); }
+
+        #search-listings:focus {
+            border-color: rgba(63,94,69,0.4) !important;
+            box-shadow: 0 0 0 3px rgba(63,94,69,0.08) !important;
+            background: #fff !important;
+            outline: none;
+        }
+
     </style>
 </head>
 
@@ -164,6 +197,21 @@
 
     <div id="fade-overlay"></div>    <!-- REACT MOUNT POINT (Replaces manual section) -->
     <div id="react-root" style="margin-top: 1200vh;"></div>
+
+    <script>
+        // Detect booking route BEFORE any GSAP/WebGL runs
+        (function() {
+            var hash = window.location.hash || '';
+            if (hash.indexOf('/location/') !== -1) {
+                document.body.classList.add('booking-route');
+                var root = document.getElementById('react-root');
+                if (root) {
+                    root.style.marginTop = '0';
+                    root.style.opacity = '1';
+                }
+            }
+        })();
+    </script>
 
     <script type="module" src="/main.jsx"></script>
 
@@ -182,6 +230,8 @@
 
 
     <script>
+        // Skip all WebGL/GSAP/Lenis init on booking routes
+        if (document.body.classList.contains('booking-route')) { void 0; } else {
         // --- SMOOTH SCROLL (LENIS) --- //
         const lenis = new Lenis({
             duration: 1.5,
@@ -201,11 +251,13 @@
         }
         requestAnimationFrame(raf);
 
+        // Expose lenis globally so React components can use it for scroll restoration
+        window.__vanrootsLenis = lenis;
+
         // --- GSAP SCROLL LOGIC --- //
         gsap.registerPlugin(ScrollTrigger);
 
-        // Transition Reveal for React Section (Simple Fade)
-        // Premium Reveal for React Section
+        // React section reveal — respects sessionStorage flag on return visits
         gsap.set("#react-root", { opacity: 0 });
         gsap.to("#react-root", {
             scrollTrigger: {
@@ -243,11 +295,11 @@
         });
 
         // Parallax rising effect for the Community Section
-        gsap.from("#community-roots", {
+        gsap.from("#react-community", {
             y: 120,
             opacity: 0,
             scrollTrigger: {
-                trigger: "#community-roots",
+                trigger: "#react-community",
                 start: "top bottom",
                 end: "top 35%",
                 scrub: 1.6,
@@ -492,6 +544,7 @@
 
         loadTextures();
         requestAnimationFrame(loop);
+        } // end booking-route guard
     </script>
 </body>
 </html>

@@ -1,0 +1,80 @@
+/* ─── Booking Layout ──────────────────────────────────────────────── */
+
+.booking-container {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* CRITICAL: lets flex children control their own overflow */
+  overflow: hidden; /* clip anything that escapes */
+}
+
+/* ── Cards List (middle column) ── */
+.booking-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* enables overflow-y:auto to take effect */
+  overflow: hidden; /* listingCol inner cardScroll owns the scroll */
+}
+
+/* ── Details Panel (right column) ── */
+.booking-right {
+  flex: 1;
+  min-height: 0; /* same fix */
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* ── Elegant minimal scrollbars ── */
+.booking-left ::-webkit-scrollbar,
+.booking-right::-webkit-scrollbar {
+  width: 5px;
+}
+
+.booking-left ::-webkit-scrollbar-track,
+.booking-right::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.booking-left ::-webkit-scrollbar-thumb,
+.booking-right::-webkit-scrollbar-thumb {
+  background: rgba(24, 194, 164, 0.35);
+  border-radius: 10px;
+}
+
+.booking-left ::-webkit-scrollbar-thumb:hover,
+.booking-right::-webkit-scrollbar-thumb:hover {
+  background: rgba(24, 194, 164, 0.6);
+}
+
+/* ── 2-Column Booking Layout ── */
+.left-panel {
+  flex: 0 0 60%;
+  padding-right: 40px;
+  overflow-y: auto;
+}
+.right-panel {
+  flex: 0 0 40%;
+  position: sticky;
+  top: 100px;
+  align-self: flex-start;
+}
+
+@media (max-width: 768px) {
+  .booking-container {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  .left-panel {
+    flex: 1 1 auto;
+    padding-right: 0;
+    margin-bottom: 40px;
+  }
+  .right-panel {
+    flex: 1 1 auto;
+    position: relative;
+    top: 0;
+  }
+}
