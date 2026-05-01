@@ -997,7 +997,6 @@ const s = {
   guestCtrl: { display: 'flex', alignItems: 'center', gap: 16 },
   guestBtn: { width: 36, height: 36, borderRadius: '50%', border: '1px solid #ccc', background: '#fff', fontSize: '1.2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111', transition: 'all 0.2s' },
   guestCount: { fontFamily: "'Inter', sans-serif", fontSize: '1.1rem', fontWeight: 700, color: '#111', minWidth: 20, textAlign: 'center' },
-  priceBreakdown: { borderTop: '1px dashed #ccc', paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 12 },
   priceRow: { display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: '0.9rem', color: '#555' },
   priceTotal: { display: 'flex', justifyContent: 'space-between', fontFamily: "'Inter', sans-serif", fontSize: '1.1rem', fontWeight: 800, color: '#111', marginTop: 8, paddingTop: 12, borderTop: '1px solid #ddd' },
   priceBreakdown: {
